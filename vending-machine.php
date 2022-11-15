@@ -1,8 +1,5 @@
 <?php
 
-$client = new stdClass();
-$client->wallet = 500;
-
 function createProduct($name, $size, $price)
 {
     $product = new stdClass();
@@ -15,10 +12,10 @@ function createProduct($name, $size, $price)
 $products = [
     createProduct("Coffee (L) (1.90$)", 'L',190),
     createProduct("Coffee (XL) (2.80$)", 'XL',280),
-    createProduct("Hot chocolate (L) (1.80$)", 'L',1.80),
-    createProduct("Irish coffee (L) (2.10$)", 'L',2.10),
-    createProduct( "Green tea (L) (1.50$)", 'L',1.50),
-    createProduct("Black tea (L) (1.50$)", 'L' ,1.50),
+    createProduct("Hot chocolate (L) (1.80$)", 'L',180),
+    createProduct("Irish coffee (L) (2.10$)", 'L',210),
+    createProduct( "Green tea (L) (1.50$)", 'L',150),
+    createProduct("Black tea (L) (1.50$)", 'L' ,150)
 ];
 
 $coins = [
@@ -32,43 +29,42 @@ $coins = [
     1 => 2000
 ];
 
-$cashRegister = 0;
-
 foreach ($products as $key => $product) {
     echo "[{$key}] {$product->name}\n";
 }
 
 $selection = (int)readline("Please, select a drink: \n");
-echo "You selected {$selection} = {$product->name}\n";
+echo "You selected {$selection} = {$products[$selection]->name}\n";
 
-while ($cashRegister < $client->wallet) {
+$cashRegister = 0;
+while ($cashRegister < $products[$selection]->price) {
     $insertCoins = (int)readline("Please, insert coins: \n");
 
-        if ($insertCoins != $product->price) {
-            echo "Not enough coins :(\n";
-            echo $insertCoins;
-        } else {
-            echo "Thank You! Here is your change!\n";
-        }
+    $reminder = $insertCoins - $products[$selection]->price;
 
+    foreach ($coins as $coin => $amount) {
+        $coinAmount = intdiv($reminder, $coin);
+        $coins[$coin] -= $coinAmount;
+
+        if ($coinAmount > 0) {
+            $reminder -= $coin * $coinAmount;
+            echo "Giving {$coin} x {$coinAmount}" . PHP_EOL;
+        }
+    }
     $cashRegister += $insertCoins;
-}
 
-    $cashBalance = $cashRegister - $selection[$product->price];
-
-    foreach ($coins as $coin => $value)
-    {
-        if ($cashBalance <= 0) {
-            return;
-        }
-        $times = floor($cashBalance / $coin);
-        echo $coin . "/" . $times;
-        $cashBalance -= $coin * $times;
-
-        echo "Reminder is: " . $cashBalance;
+    if ($reminder !== 0) {
+        echo "Not enough coins :(\n";
+        echo $insertCoins;
+    } else {
+        echo "Thank You! Here is your change!\n";
     }
 
-
-
-
-
+    if ($reminder > 0) {
+        echo "Failed to give back reminder\n";
+        break;
+    }
+}
+foreach ($coins as $coin => $amount) {
+    echo "| {$coin} = {$amount}|\n";
+}
